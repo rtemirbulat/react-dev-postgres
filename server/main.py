@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import MetaData, Table, Column, Integer, String, update
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
+from typing import Optional, List
 import asyncio
 import os
 
@@ -114,7 +115,7 @@ async def notify_clients():
 
 
 # CRUD API endpoints
-@app.get("/rows", response_model=list[Row])
+@app.get("/rows", response_model=List[Row])
 async def get_rows():
     async with async_session() as session:
         result = await session.execute(rows.select())
