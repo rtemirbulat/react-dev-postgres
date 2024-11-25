@@ -15,7 +15,7 @@ function App() {
       const response = await axios.get("http://localhost:8000/rows");
       setRows(response.data);
     } catch (error) {
-      console.error("Error fetching rows:", error);
+      console.error("Ошибка при обработке строк:", error);
     }
   };
 
@@ -39,12 +39,12 @@ function App() {
   const updateRow = async (row) => {
     try {
       await axios.put(`http://localhost:8000/rows/${row.id}`, row);
-      alert("Row updated successfully");
+      alert("Строка успешно обновлена");
       setEditedRow(null); // Reset editing state
       fetchRows(); // Refresh rows after update
     } catch (error) {
-      alert("Error updating row. Check console for details.");
-      console.error("Error updating row:", error);
+      alert("Ошибка при обновлении базы. Обратитесь к админу");
+      console.error("Ошибка при обновлении базы:", error);
     }
   };
 
@@ -101,11 +101,11 @@ function App() {
 
   return (
       <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-        <h1>Database Viewer</h1>
+        <h1>Веб-форма</h1>
 
         {/* Legend for colors */}
         <div style={{ marginBottom: "20px" }}>
-          <h3>Legend</h3>
+          <h3>Ключи</h3>
           <ul>
             <li><span style={{ backgroundColor: "lightblue", padding: "5px" }}></span>: ЦДНГ </li>
             <li><span style={{ backgroundColor: "lightgreen", padding: "5px" }}></span>: НГДУ</li>
@@ -274,11 +274,11 @@ function App() {
                 <td>
                   {editedRow?.id === row.id ? (
                       <>
-                        <button onClick={() => updateRow(editedRow)}>Save</button>
-                        <button onClick={() => setEditedRow(null)}>Cancel</button>
+                        <button onClick={() => updateRow(editedRow)}>Сохранить</button>
+                        <button onClick={() => setEditedRow(null)}>Отмена</button>
                       </>
                   ) : (
-                      <button onClick={() => setEditedRow(row)}>Edit</button>
+                      <button onClick={() => setEditedRow(row)}>Изменить</button>
                   )}
                 </td>
               </tr>

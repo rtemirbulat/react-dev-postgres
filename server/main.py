@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -21,7 +23,7 @@ metadata = MetaData()
 
 # Table definition
 rows = Table(
-    "ml_training_finetune_test",
+    "ml_training_finetune",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("audio_file_path", String),
@@ -74,19 +76,19 @@ app.add_middleware(
 class Row(BaseModel):
     id: int
     audio_file_path: str
-    human_output: str
-    model_output_v1: str
-    model_output_v2: str
-    accuracy_v1: str
-    accuracy_v2: str
-    cdng: str
-    date: str
-    ngdu: str
-    gu: str
-    oiler_number: str
-    rut: str
-    ip_address: str
-    isu: str
+    human_output: Optional[str] = None  # Allow None
+    model_output_v1: Optional[str] = None  # Allow None
+    model_output_v2: Optional[str] = None  # Allow None
+    accuracy_v1: Optional[str] = None  # Allow None
+    accuracy_v2: Optional[str] = None  # Allow None
+    cdng: Optional[str] = None  # Allow None
+    date: Optional[str] = None  # Allow None
+    ngdu: Optional[str] = None  # Allow None
+    gu: Optional[str] = None  # Allow None
+    oiler_number: Optional[str] = None  # Allow None
+    rut: Optional[str] = None  # Allow None
+    ip_address: Optional[str] = None  # Allow None
+    isu: Optional[str] = None  # Allow None
     class Config:
         from_attributes = True
 
@@ -144,4 +146,4 @@ async def get_audio(audio_file_name: str):
     if os.path.exists(audio_file_path):
         return FileResponse(audio_file_path)
     else:
-        raise HTTPException(status_code=404, detail="Audio file not found")
+        raise HTTPException(status_code=404, detail="Аудио не найдено")
