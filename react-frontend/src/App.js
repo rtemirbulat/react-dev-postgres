@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { FaPlay, FaPause, FaStop } from "react-icons/fa"; // FontAwesome icons for play/pause/stop
 import "./App.css";
 
 function App() {
   const [rows, setRows] = useState([]);
-  const [editedRow, setEditedRow] = useState(null);
+  const [currentAudio, setCurrentAudio] = useState(null);
+  const [audioProgress, setAudioProgress] = useState(0); // Track the current progress of audio
+  const [editedRow, setEditedRow] = useState(null); // Track the row being edited
 
   // Function to fetch rows
   const fetchRows = async () => {
@@ -45,23 +48,56 @@ function App() {
     }
   };
 
-  // Play the media file
-  const playFile = (audioFileName) => {
-    // Construct the URL dynamically using the audio file name
-    const fileUrl = `http://localhost:8000/audio/${audioFileName}`;
+  // Function to play/pause the audio
+  const playPauseFile = (filePath) => {
+    if (currentAudio && currentAudio.src === `http://localhost:8000/${filePath}`) {
+      // If the audio is already playing, pause it
+      if (currentAudio.paused) {
+        currentAudio.play();
+      } else {
+        currentAudio.pause();
+      }
+    } else {
+      // If a different audio is selected, stop the current one and play the new one
+      if (currentAudio) {
+        currentAudio.pause();
+        setAudioProgress(0); // Reset progress to 0 when starting a new audio
+      }
 
-    const audio = new Audio(`http://localhost:8000/audio/${filePath}`);
+      const newAudio = new Audio(`http://localhost:8000/${filePath}`);
+      newAudio.play();
+      setCurrentAudio(newAudio);
+      newAudio.ontimeupdate = () => {
+        setAudioProgress((newAudio.currentTime / newAudio.duration) * 100);
+      };
 
-    audio.play()
-        .then(() => {
-          console.log("Audio is playing");
-        })
-        .catch((error) => {
-          console.error('Error playing audio:', error);
-          alert('Failed to play audio');
-        });
+      // Handle when audio ends (optional - reset progress and state)
+      newAudio.onended = () => {
+        setAudioProgress(0);
+      };
+    }
   };
 
+  // Stop the audio and reset progress
+  const stopAudio = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      setAudioProgress(0);
+    }
+  };
+  // Handle seeking to a specific time in the audio
+  const handleSeek = (event) => {
+    if (currentAudio) {
+      const newTime = (event.target.value / 100) * currentAudio.duration;
+      currentAudio.currentTime = newTime;
+
+      // Prevent seeking beyond the audio's duration
+      if (currentAudio.currentTime >= currentAudio.duration) {
+        currentAudio.pause();
+        setAudioProgress(0);
+      }
+    }
+  };
 
   return (
       <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
@@ -104,8 +140,30 @@ function App() {
               <tr key={row.id}>
                 <td>{row.id}</td>
                 <td>
-                  {/* Button to play audio */}
-                  <button onClick={() => playFile(row.audio_file_path)}>Play</button>
+                  {/* Display play/pause/stop buttons and seek timeline */}
+                  <div>
+                    <button onClick={() => playPauseFile(row.audio_file_path)}>
+                      {currentAudio && currentAudio.src === `http://localhost:8000/${row.audio_file_path}` && !currentAudio.paused ? (
+                          <FaPause/>
+                      ) : (
+                          <FaPlay/>
+                      )}
+                    </button>
+                    {currentAudio && currentAudio.src === `http://localhost:8000/${row.audio_file_path}` && (
+                        <>
+                          <button onClick={stopAudio}>
+                            <FaStop/>
+                          </button>
+                          <input
+                              type="range"
+                              value={audioProgress}
+                              onChange={handleSeek}
+                              max="100"
+                              style={{width: "100%"}}
+                          />
+                        </>
+                    )}
+                  </div>
                 </td>
                 <td>
                   {editedRow?.id === row.id ? (
@@ -113,7 +171,7 @@ function App() {
                           type="text"
                           value={editedRow.human_output}
                           onChange={(e) =>
-                              setEditedRow({ ...editedRow, human_output: e.target.value })
+                              setEditedRow({...editedRow, human_output: e.target.value})
                           }
                       />
                   ) : (
@@ -123,91 +181,91 @@ function App() {
                 <td>{row.model_output_v1}</td>
                 <td>{row.date}</td>
                 <td
-                    style={{ backgroundColor: "lightblue" }}
+                    style={{backgroundColor: "lightblue"}}
                 >
                   {editedRow?.id === row.id ? (
                       <input
                           type="text"
                           value={editedRow.cdng}
-                          onChange={(e) => setEditedRow({ ...editedRow, cdng: e.target.value })}
+                          onChange={(e) => setEditedRow({...editedRow, cdng: e.target.value})}
                       />
                   ) : (
                       row.cdng
                   )}
                 </td>
                 <td
-                    style={{ backgroundColor: "lightgreen" }}
+                    style={{backgroundColor: "lightgreen"}}
                 >
                   {editedRow?.id === row.id ? (
                       <input
                           type="text"
                           value={editedRow.ngdu}
-                          onChange={(e) => setEditedRow({ ...editedRow, ngdu: e.target.value })}
+                          onChange={(e) => setEditedRow({...editedRow, ngdu: e.target.value})}
                       />
                   ) : (
                       row.ngdu
                   )}
                 </td>
                 <td
-                    style={{ backgroundColor: "lightyellow" }}
+                    style={{backgroundColor: "lightyellow"}}
                 >
                   {editedRow?.id === row.id ? (
                       <input
                           type="text"
                           value={editedRow.gu}
-                          onChange={(e) => setEditedRow({ ...editedRow, gu: e.target.value })}
+                          onChange={(e) => setEditedRow({...editedRow, gu: e.target.value})}
                       />
                   ) : (
                       row.gu
                   )}
                 </td>
                 <td
-                    style={{ backgroundColor: "lightcoral" }}
+                    style={{backgroundColor: "lightcoral"}}
                 >
                   {editedRow?.id === row.id ? (
                       <input
                           type="text"
                           value={editedRow.oiler_number}
-                          onChange={(e) => setEditedRow({ ...editedRow, oiler_number: e.target.value })}
+                          onChange={(e) => setEditedRow({...editedRow, oiler_number: e.target.value})}
                       />
                   ) : (
                       row.oiler_number
                   )}
                 </td>
                 <td
-                    style={{ backgroundColor: "lightpink" }}
+                    style={{backgroundColor: "lightpink"}}
                 >
                   {editedRow?.id === row.id ? (
                       <input
                           type="text"
                           value={editedRow.rut}
-                          onChange={(e) => setEditedRow({ ...editedRow, rut: e.target.value })}
+                          onChange={(e) => setEditedRow({...editedRow, rut: e.target.value})}
                       />
                   ) : (
                       row.rut
                   )}
                 </td>
                 <td
-                    style={{ backgroundColor: "lightgrey" }}
+                    style={{backgroundColor: "lightgrey"}}
                 >
                   {editedRow?.id === row.id ? (
                       <input
                           type="text"
                           value={editedRow.ip_address}
-                          onChange={(e) => setEditedRow({ ...editedRow, ip_address: e.target.value })}
+                          onChange={(e) => setEditedRow({...editedRow, ip_address: e.target.value})}
                       />
                   ) : (
                       row.ip_address
                   )}
                 </td>
                 <td
-                    style={{ backgroundColor: "lightgoldenrodyellow" }}
+                    style={{backgroundColor: "lightgoldenrodyellow"}}
                 >
                   {editedRow?.id === row.id ? (
                       <input
                           type="text"
                           value={editedRow.isu}
-                          onChange={(e) => setEditedRow({ ...editedRow, isu: e.target.value })}
+                          onChange={(e) => setEditedRow({...editedRow, isu: e.target.value})}
                       />
                   ) : (
                       row.isu
