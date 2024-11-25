@@ -1,18 +1,19 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import MetaData, Table, Column, Integer, String, update
 from dotenv import load_dotenv
+from fastapi.staticfiles import StaticFiles
 import asyncio
 import os
 
 # Load environment variables
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
-
+AUDIO_FILES_PATH = os.getenv("AUDIO_FILES_PATH")
 # Async database engine and session setup
 engine = create_async_engine(DATABASE_URL, echo=True)
 async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
@@ -58,9 +59,7 @@ async def app_lifespan(app: FastAPI):
 # FastAPI app
 app = FastAPI(lifespan=app_lifespan)
 
-# Mount static files for serving media
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
+app.mount("/media", StaticFiles(directory=AUDIO_FILES_PATH), name="media")
 # Enable CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
@@ -89,7 +88,7 @@ class Row(BaseModel):
     ip_address: str
     isu: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # WebSocket route
 @app.websocket("/ws")
@@ -135,6 +134,14 @@ async def update_row(row_id: int, row: dict):  # `row` is expected to be a dict
             return {"status": "success", "updated_rows": result.rowcount}
 
 
-@app.get("/static/{file_path:path}")
-async def play_media(file_path: str):
-    return {"url": f"http://localhost:8000/static/{file_path}"}
+# Endpoint to serve the audio file
+@app.get("/media/{audio_file_name}")
+async def get_audio(audio_file_name: str):
+    # Create the full path to the audio file
+    audio_file_path = os.path.join(AUDIO_FILES_PATH, audio_file_name)
+
+    # Check if the file exists
+    if os.path.exists(audio_file_path):
+        return FileResponse(audio_file_path)
+    else:
+        raise HTTPException(status_code=404, detail="Audio file not found")

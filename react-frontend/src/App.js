@@ -46,10 +46,22 @@ function App() {
   };
 
   // Play the media file
-  const playFile = (filePath) => {
-    const audio = new Audio(`http://localhost:8000/media/${filePath}`);
-    audio.play();
+  const playFile = (audioFileName) => {
+    // Construct the URL dynamically using the audio file name
+    const fileUrl = `http://localhost:8000/audio/${audioFileName}`;
+
+    const audio = new Audio(`http://localhost:8000/audio/${filePath}`);
+
+    audio.play()
+        .then(() => {
+          console.log("Audio is playing");
+        })
+        .catch((error) => {
+          console.error('Error playing audio:', error);
+          alert('Failed to play audio');
+        });
   };
+
 
   return (
       <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
@@ -92,6 +104,7 @@ function App() {
               <tr key={row.id}>
                 <td>{row.id}</td>
                 <td>
+                  {/* Button to play audio */}
                   <button onClick={() => playFile(row.audio_file_path)}>Play</button>
                 </td>
                 <td>
